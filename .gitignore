@@ -1,0 +1,13 @@
+node_modules/
+node_modules.corrupt/
+package-lock.corrupt.json
+.next/
+dist/
+coverage/
+.vitest/
+.env
+.env.local
+api/src/generated/
+*.log
+*.tsbuildinfo
+.DS_Store
