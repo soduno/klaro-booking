@@ -1,0 +1,183 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model User {
+  id                     String                   @id @default(uuid()) @db.Uuid
+  organizationId         String?                  @db.Uuid
+  firstName              String
+  lastName               String
+  email                  String                   @unique
+  passwordHash           String
+  role                   Role                     @default(USER)
+  emailVerifiedAt        DateTime?
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  bookings               Booking[]
+  sessions               RefreshSession[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens    PasswordResetToken[]
+  organization           Organization?            @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([organizationId])
+}
+
+model Organization {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  users     User[]
+  products  Product[]
+  categories Category[]
+  customers Customer[]
+  bookings  Booking[]
+}
+
+model Customer {
+  id                 String       @id @default(uuid()) @db.Uuid
+  organizationId     String       @db.Uuid
+  name               String
+  registrationNumber String?
+  contactName        String?
+  email              String?
+  phone              String?
+  address            String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  bookings           Booking[]
+
+  @@unique([organizationId, registrationNumber])
+  @@index([organizationId, name])
+  @@index([organizationId, createdAt])
+}
+
+model Category {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  name           String
+  slug           String
+  description    String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  products       Product[]
+
+  @@unique([organizationId, name])
+  @@unique([organizationId, slug])
+  @@index([organizationId, createdAt])
+}
+
+model Booking {
+  id          String        @id @default(uuid()) @db.Uuid
+  organizationId String      @db.Uuid
+  customerId  String        @db.Uuid
+  userId      String        @db.Uuid
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  status      BookingStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  user        User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  customer     Customer     @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  items       BookingItem[]
+
+  @@index([userId, startTime])
+  @@index([organizationId, startTime])
+  @@index([customerId, startTime])
+  @@index([status, startTime])
+  @@index([createdAt])
+}
+
+model Product {
+  id          String        @id @default(uuid()) @db.Uuid
+  organizationId String      @db.Uuid
+  categoryId  String        @db.Uuid
+  sku         String
+  name        String
+  description String?
+  metadata    Json          @default("{}")
+  quantity    Int
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  bookingItems BookingItem[]
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  category     Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([name])
+  @@index([isActive])
+  @@index([organizationId, categoryId])
+  @@unique([organizationId, sku])
+}
+
+model BookingItem {
+  id        String  @id @default(uuid()) @db.Uuid
+  bookingId String  @db.Uuid
+  productId String  @db.Uuid
+  quantity  Int
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([bookingId, productId])
+  @@index([productId])
+}
+
+model RefreshSession {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
