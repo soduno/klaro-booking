@@ -1,0 +1,3 @@
+ALTER TABLE "Category" ALTER COLUMN "id" DROP DEFAULT;
+ALTER TABLE "Category" ALTER COLUMN "updatedAt" DROP DEFAULT;
+CREATE INDEX IF NOT EXISTS "User_createdAt_idx" ON "User"("createdAt");
