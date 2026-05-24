@@ -1,0 +1,1 @@
+export function AuthTitle({ title, subtitle }: { title: string; subtitle: string }) { return <div className="mb-8"><h1 className="text-4xl font-black tracking-tight">{title}</h1><p className="mt-3 leading-7 text-slate-600">{subtitle}</p></div>; }
