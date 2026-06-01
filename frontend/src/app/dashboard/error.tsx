@@ -1,0 +1,2 @@
+'use client';
+export default function ErrorPage({reset}:{error:Error&{digest?:string};reset:()=>void}){return <div className="rounded-2xl border border-red-100 bg-white p-10 text-center"><h2 className="text-2xl font-bold">We couldn’t load this page</h2><p className="mt-2 text-slate-600">Try again in a moment.</p><button onClick={reset} className="mt-6 rounded-xl bg-emerald-800 px-5 py-3 font-bold text-white">Try again</button></div>}
